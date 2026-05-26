@@ -43,12 +43,6 @@ def helpMessage() {
 	""".stripIndent()
 }
 
-// Show help message
-if (params.help) {
-	helpMessage()
-	exit 0
-}
-
 //import db
 process importDb {
 	input:
@@ -203,7 +197,6 @@ process importFastq {
 process dataQC {
 	input:
 	val 'flag_import'
-	output:
 	script:
     if(params.dataQC)
 	"""
@@ -467,7 +460,6 @@ process filterTaxa {
 process taxonomyVisualization {
 	input:
 	val 'flag_filter'
-	output:
 	script:
     if(params.taxonomyVisualization && params.filterTaxa)
 	"""
@@ -519,7 +511,6 @@ process diversityAnalyses {
 	input:
 	val 'flag_taxa'
 	val 'flag_collapse'
-	output:
 	script:
     if(params.diversityAnalyses && params.filterTaxa)
 	"""
@@ -606,18 +597,23 @@ process diversityAnalyses {
 }
 
 workflow {
-	sequences_db=Channel.fromPath(params.dbSequencesFasta)
-	taxonomy_db=Channel.fromPath(params.dbTaxonomyTsv)
-	importDb(sequences_db, taxonomy_db)
-	concatenateFastq(params.workDir)
-	filterFastq(concatenateFastq.out)
-	downsampleFastq(filterFastq.out)
-	importFastq(downsampleFastq.out)
-	derepSeq(importFastq.out)
-	assignTaxonomy(derepSeq.out, importDb.out)
-	filterTaxa(assignTaxonomy.out)
-	taxonomyVisualization(filterTaxa.out)
-	collapseTables(assignTaxonomy.out)
-	dataQC(importFastq.out)
-	diversityAnalyses(filterTaxa.out, collapseTables.out)
+	if (params.help) {
+		helpMessage()
+	} else {
+		sequences_db=Channel.fromPath(params.dbSequencesFasta)
+		taxonomy_db=Channel.fromPath(params.dbTaxonomyTsv)
+
+		importDb(sequences_db, taxonomy_db)
+		concatenateFastq(params.workDir)
+		filterFastq(concatenateFastq.out)
+		downsampleFastq(filterFastq.out)
+		importFastq(downsampleFastq.out)
+		derepSeq(importFastq.out)
+		assignTaxonomy(derepSeq.out, importDb.out)
+		filterTaxa(assignTaxonomy.out)
+		taxonomyVisualization(filterTaxa.out)
+		collapseTables(assignTaxonomy.out)
+		dataQC(importFastq.out)
+		diversityAnalyses(filterTaxa.out, collapseTables.out)
+	}
 }
