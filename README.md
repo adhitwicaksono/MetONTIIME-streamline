@@ -1,5 +1,18 @@
 # MetONTIIME-streamline
 
+> [!NOTE]
+> **Project status: archived exploratory fork**
+>
+> MetONTIIME-streamline began as an attempt to make the original MetONTIIME workflow easier to use for Oxford Nanopore metabarcoding data and QIIME2-compatible downstream analysis.
+>
+> During testing, we found that the original Nextflow/Docker-centered architecture is scientifically useful but too heavy for the lightweight, beginner-friendly workflow we want to build.
+>
+> This repository is therefore preserved as an exploratory fork, documentation archive, and audit record.
+>
+> Active development is moving toward a new independent project:
+>
+> **NanoBridge-QIIME2 (nbQIIME2)** — a lightweight local command-line helper for converting Oxford Nanopore amplicon/metabarcoding FASTQ data into QIIME2-compatible outputs without requiring Docker or Nextflow by default.
+
 **MetONTIIME-streamline** is a user-friendly fork of **MetONTIIME**, designed to make Oxford Nanopore Technologies (ONT) metabarcoding analysis easier to run, inspect, and connect with the QIIME2 ecosystem.
 
 The goal of this fork is simple:
