@@ -1,129 +1,674 @@
-# MetONTIIME
+# MetONTIIME-streamline
 
-**MetONTIIME** is a Meta-barcoding pipeline for analysing ONT data in QIIME2 framework. Starting from v2.0.0, the pipeline is based on Nextflow, to allow for easier installation and better execution monitoring.
+**MetONTIIME-streamline** is a user-friendly fork of **MetONTIIME**, designed to make Oxford Nanopore Technologies (ONT) metabarcoding analysis easier to run, inspect, and connect with the QIIME2 ecosystem.
 
-## Getting started
+The goal of this fork is simple:
 
-**Prerequisites**
+> Take ONT metabarcoding FASTQ files and produce QIIME2-compatible outputs with fewer fragile manual steps.
 
-* [Nextflow](https://nf-co.re/usage/installation)
-* [Docker](https://docs.docker.com/engine/install/) or [Singularity](https://sylabs.io/guides/3.0/user-guide/installation.html)                                                                                  
-                                                                                   
-**Installation**
+MetONTIIME-streamline does **not** aim to replace QIIME2.  
+Instead, it acts as a bridge between ONT long-read metabarcoding data and downstream QIIME2-style microbiome analysis.
 
+---
+
+## Why this fork exists
+
+The original MetONTIIME pipeline is scientifically useful, but running it can be tedious for new users because it depends heavily on manual configuration through `metontiime2.conf`.
+
+This fork aims to improve:
+
+- clearer input/output structure
+- simpler command-line usage
+- better documentation
+- easier benchmarking
+- safer parameter handling
+- QIIME2 downstream compatibility
+- reproducible reporting for ONT metabarcoding projects
+
+The long-term target is to make ONT metabarcoding analysis feel closer to a normal QIIME2 workflow, while still respecting the specific challenges of ONT reads.
+
+---
+
+## Relationship to the original MetONTIIME
+
+This repository is a fork of:
+
+```text
+https://github.com/MaestSi/MetONTIIME
 ```
-git clone https://github.com/MaestSi/MetONTIIME.git
-cd MetONTIIME
+
+The original MetONTIIME is a Nextflow-based metabarcoding pipeline for ONT data using the QIIME2 framework.
+
+MetONTIIME-streamline currently preserves the original pipeline structure, but will gradually add:
+
+- clearer documentation
+- streamlined configuration templates
+- input validation
+- simplified wrapper commands
+- benchmark examples
+- improved reporting
+- downstream QIIME2 compatibility notes
+
+Please cite the original MetONTIIME work when using this pipeline.
+
+---
+
+## What this pipeline is for
+
+MetONTIIME-streamline is intended for ONT metabarcoding datasets such as:
+
+- full-length 16S rRNA amplicons
+- 18S rRNA amplicons
+- ITS amplicons
+- other marker-gene metabarcoding datasets, depending on the reference database used
+
+Typical use cases include:
+
+- environmental microbiome profiling
+- microbial community analysis
+- biodiversity screening
+- teaching ONT metabarcoding workflows
+- preparing QIIME2-compatible outputs from ONT data
+
+---
+
+## What this pipeline is not
+
+MetONTIIME-streamline is not:
+
+- a replacement for QIIME2
+- a replacement for EPI2ME
+- a shotgun metagenomics pipeline
+- a de novo genome assembly workflow
+- a universal taxonomic classifier
+- a magic correction tool for poor-quality ONT reads
+
+ONT metabarcoding data can be noisy. Good results still depend on:
+
+- good sequencing quality
+- appropriate marker design
+- correct barcode/demultiplexing strategy
+- suitable length and quality filtering
+- suitable reference database
+- careful biological interpretation
+
+---
+
+## Current status
+
+This repository is currently in an early streamlining stage.
+
+At the moment, the pipeline still follows the original MetONTIIME/Nextflow structure.
+
+Planned improvements include:
+
+```text
+Phase 1 — Documentation cleanup
+Phase 2 — Input/output structure clarification
+Phase 3 — Example configuration templates
+Phase 4 — Validation helper scripts
+Phase 5 — Simple command-line wrapper
+Phase 6 — Benchmarking with real ONT metabarcoding data
+Phase 7 — QIIME2 downstream compatibility guide
+```
+
+---
+
+## Requirements
+
+The original MetONTIIME pipeline requires:
+
+- Nextflow
+- Docker or Singularity/Apptainer
+- QIIME2-compatible reference database files
+- demultiplexed or barcode-separated ONT FASTQ files
+
+Recommended:
+
+- Linux or WSL2
+- Conda/Mamba
+- Docker
+- sufficient storage for intermediate files
+- basic familiarity with command-line workflows
+
+---
+
+## Installation
+
+Clone this fork:
+
+```bash
+git clone https://github.com/adhitwicaksono/MetONTIIME-streamline.git
+cd MetONTIIME-streamline
 chmod 755 *
 ```
 
-## Overview
+Check Nextflow:
 
-<p align="center">
-  <img src="Figures/MetONTIIME_pipeline_flowchart.png" alt="drawing" width="900" title="MetONTIIME_pipeline_flowchart">
-</p>
-
-## Usage
-
-The MetONTIIME pipeline requires you to open metontiime2.conf configuration file and set the desired options. Then, you can run the pipeline using either docker or singularity environments just specifying a value for the -profile variable.
-
-```
-Usage:
-nextflow -c metontiime2.conf run metontiime2.nf --workDir="/path/to/workDir" --resultsDir="/path/to/resultsDir" -profile docker
-
-Mandatory argument:
--profile                                                 Configuration profile to use. Available: docker, singularity
-Other mandatory arguments which may be specified in the metontiime2.conf file
-
---workDir                                               Path to working directory including fastq.gz files
---sampleMetadata                                        Path to sample metadata tsv file; if it doesn't exist yet, it is created at runtime
---dbSequencesFasta                                      Path to database file with sequences in fasta format
---dbTaxonomyTsv                                         Path to database file with sequence id-to-taxonomy correspondence in tsv format
---dbSequencesQza                                        Database file name with sequences as QIIME2 artifact (qza)
---dbTaxonomyQza                                         Database file name with sequence id-to-taxonomy correspondence as QIIME2 artifact (qza)
---classifier                                            Taxonomy classifier, available: VSEARCH, Blast
---maxNumReads                                           Maximum number of reads per sample; if one sample has more than maxNumReads, random downsampling is performed
---minReadLength                                         Minimum length (bp) for a read to be retained
---maxReadLength                                         Maximum length (bp) for a read to be retained
---minQual                                               Minimum average PHRED score for a read to be retained
---extraEndsTrim                                         Number of bases to be trimmed at both ends
---clusteringIdentity                                    Identity for de novo clustering [0-1]
---maxAccepts                                            Maximum number of candidate hits for each read, to be used for consensus taxonomy assignment
---minConsensus                                          Minimum fraction of assignments must match top hit to be accepted as consensus assignment [0.5-1]
---minQueryCoverage                                      Minimum query coverage for an alignment to be considered a candidate hit [0-1]
---minIdentity                                           Minimum alignment identity for an alignment to be considered a candidate hit [0-1]
---taxaLevelDiversity                                    Taxonomy level at which you want to perform non phylogeny-based diversity analyses
---numReadsDiversity                                     Max num. reads for diversity analyses
---taxaOfInterest                                        Taxa of interest that you want to retain and to focus the analysis on
---minNumReadsTaxaOfInterest                             Minimum number of reads assigned to Taxa of interest to retain a sample
---resultsDir                                            Path to directory containing results
+```bash
+nextflow -version
 ```
 
-## Database
+Check Docker:
 
-MetONTIIME pipeline allows the users to choose the database according to the marker gene sequenced and to their preferences.
-Some [marker gene reference database](https://docs.qiime2.org/2023.9/data-resources/#taxonomy-classifiers-for-use-with-q2-feature-classifier), as [SILVA (16S/18S rRNA)](https://www.arb-silva.de/download/archive/qiime), [GreenGenes (16SrRNA)](http://ftp.microbio.me/greengenes_release/2022.10/) and [UNITE (fungal ITS)](https://doi.plutof.ut.ee/doi/10.15156/BIO/2483915) are already formatted for use with QIIME2, as they are available as a pair of sequences (fasta) and taxonomy (tsv) files, and they can therefore be easily imported as QIIME2 artifacts (qza).
-In case you downloaded a fasta file from NCBI and you want to obtain the corresponding taxonomy tsv file, you can use **TaxonomyTsv_from_fastaNCBI.R** script. This R script requires an R installation with [taxize](http://cran.nexr.com/web/packages/taxize/vignettes/taxize_vignette.html) and [Biostrings](https://bioconductor.org/packages/release/bioc/html/Biostrings.html) packages installed.
-For example, if you want to use the same database used by the EPI2ME 16S workflow for bacterial 16S gene, you can go to [BioProject 33175](https://www.ncbi.nlm.nih.gov/nuccore?term=33175%5BBioProject%5D), click _send to_, select _Complete Record_ and _File_, set the _Format_ to _FASTA_ and then click _Create File_; the corresponding taxonomyTsv file can then be created with:
-
-```
-Rscript /path/to/TaxonomyTsv_from_fastaNCBI.R \
-dbSequencesFasta="/path/to/input/dbSequences.fasta" \
-dbTaxonomyTsv="/path/to/output//dbTaxonomy.tsv" \
-ENTREZ_KEY="myentrezkey"
+```bash
+docker --version
 ```
 
-The optional ENTREZ_KEY argument allows speeding up data retrieval from NCBI. You can get your own ENTREZ_KEY following the instructions reported [here](https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/).
+---
 
-## Output explanation
+## Recommended project structure
 
-The pipeline is composed of a set of processes. They can be optionally turned-off by setting them to "false" in the *metontiime2.conf* file.
+For a clean analysis, organize your files like this:
 
-* importDb: import a fasta file with sequences **dbSequencesFasta** and a tsv file with sequence ids and multi-level taxonomy (with each level separated by ';') **dbTaxonomyTsv** as a pair of QIIME2 artifacts **dbSequencesQza** and **dbTaxonomyQza**.
-* concatenateFastq: in case **workDir** is the output directory generated by MinKNOW, this process concatenates all fastq files corresponding to each barcode (in workDir/barcode\<num\>) and compresses them to fastq.gz; if **workDir** already contains fastq.gz files for each barcode, set the process to "false".
-* filterFastq: filter fastq.gz files based on length (**minReadLength**, **maxReadLength**) and quality (**minQual**). Moreover, trim **extraEndsTrim** bases from both sides.
-* downsampleFastq: cap the amount of sequencing reads for each sample to **maxNumReads**.
-* importFastq: import filtered fastq.gz files as QIIME2 artifacts.
-* dataQC: evaluate sequencing reads quality/length statistics.
-* derepSeq: perform clustering at **clusteringIdentity** identity (in case clusteringIdentity=1 , perform dereplication only), and obtain a set of representative sequences and their abundance.
-* assignTaxonomy: assign taxonomy to representative sequences using **classifier** classifier, retrieve up to **maxAccepts** hits filtered by **minIdentity** and **minQueryCoverage**, and perform consensus taxonomy assignment.
-* collapseTables: collapse feature tables at the available taxonomy levels.
-* filterTaxa: retain only reads from **taxaOfInterest** and discard samples with less than **minNumReadsTaxaOfInterest** assigned to that taxa. In case you do not want to focus the analysis on a specific taxa, set the process to "false".
-* taxonomyVisualization: produce barplots describing the relative abundance of all taxa, all taxa excluding "Unclassified" reads, and of **taxaOfInterest** (if any).
-* diversityAnalyses: evaluate non-phylogenetic alpha- and beta-diversity indexes at **taxaLevelDiversity** level, either for all taxa or for **taxaOfInterest**, downsampling each sample at **numReadsDiversity** reads. Produce also alpha-rarefaction curves.
+```text
+project_name/
+├── raw_fastq/
+│   ├── sample01.fastq.gz
+│   ├── sample02.fastq.gz
+│   └── sample03.fastq.gz
+│
+├── metadata/
+│   └── sample-metadata.tsv
+│
+├── database/
+│   ├── db-sequences.fasta
+│   ├── db-taxonomy.tsv
+│   ├── db-sequences.qza
+│   └── db-taxonomy.qza
+│
+├── configs/
+│   └── metontiime2.local.conf
+│
+└── results/
+```
 
-## Results visualization
+For now, raw FASTQ data should generally **not** be committed to GitHub unless the dataset is public and properly cleared for release.
 
-All .qzv and .qza artifacts can be visualized importing them to [QIIME2 View](https://view.qiime2.org/).
+---
 
-In particular, you could visualize an interactive multi-sample taxonomy barplot, describing the composition of each sample at the desired taxonomic level, and a PCA plot of Beta-diversity among samples.
+## Input files
 
-<p align="center">
-  <img src="Figures/MetONTIIME_results_example.png" alt="drawing" width="1000" title="MetONTIIME results example">
-</p>
+### 1. FASTQ files
 
-## Test dataset
+Input FASTQ files should be either:
 
-A demo dataset composed of 1000 reads named Zymo-GridION-EVEN-BB-SN_sup_pass_filtered_27F_1492Rw_1000_reads.fastq.gz is available. This dataset was obtained re-basecalling with Guppy v 6.2.1 "sup" the [dataset](https://nanopore.s3.climb.ac.uk/Zymo-GridION-EVEN-BB-SN_signal.tar) generated by [LomanLab](https://github.com/LomanLab/mockcommunity) sequencing [Zymo Community Standards 2 (Even) Batch ZRC190633](https://github.com/LomanLab/mockcommunity/blob/master/specs/_d6300_zymobiomics_microbial_community_standard.pdf) mock community with R9.4.1 chemistry on a GridION device. The portion of reads corresponding to 16S gene was then extracted using [in-silico PCR](https://github.com/Nucleomics-VIB/InSilico_PCR) with 27F-1492Rw primers pair.
+```text
+.fastq
+.fastq.gz
+```
 
-<p align="center">
-  <img src="Figures/MetONTIIME_test_dataset_results.png" alt="drawing" width="800" title="Genus-level classification of test dataset by MetONTIIME">
-</p>
+Recommended naming:
 
-## Citations
+```text
+sample01.fastq.gz
+sample02.fastq.gz
+sample03.fastq.gz
+```
 
-MetONTIIME is a [Nextflow](http://www.nature.com/nbt/journal/v35/n4/full/nbt.3820.html) pipeline based on [QIIME2](https://qiime2.org/).
+Avoid spaces in file names.
 
-If this tool is useful for your work, please consider citing our [manuscript](https://www.mdpi.com/1467-3045/46/5/237).
+Good:
 
-Matoute, A.; Maestri, S.; Saout, M.; Laghoe, L.; Simon, S.; Blanquart, H.; Hernandez Martinez, M.A.; Pierre Demar, M. Meat-Borne-Parasite: A Nanopore-Based Meta-Barcoding Work-Flow for Parasitic Microbiodiversity Assessment in the Wild Fauna of French Guiana. Curr. Issues Mol. Biol. 2024, 46, 3810-3821. https://doi.org/10.3390/cimb46050237
+```text
+gili_meno_sample01.fastq.gz
+```
 
-Please, refer to the following manuscripts for further information.
+Avoid:
 
-Bolyen E, Rideout JR, Dillon MR, Bokulich NA, Abnet CC, Al-Ghalith GA, Alexander H, Alm EJ, Arumugam M, Asnicar F, Bai Y, Bisanz JE, Bittinger K, Brejnrod A, Brislawn CJ, Brown CT, Callahan BJ, Caraballo-Rodríguez AM, Chase J, Cope EK, Da Silva R, Diener C, Dorrestein PC, Douglas GM, Durall DM, Duvallet C, Edwardson CF, Ernst M, Estaki M, Fouquier J, Gauglitz JM, Gibbons SM, Gibson DL, Gonzalez A, Gorlick K, Guo J, Hillmann B, Holmes S, Holste H, Huttenhower C, Huttley GA, Janssen S, Jarmusch AK, Jiang L, Kaehler BD, Kang KB, Keefe CR, Keim P, Kelley ST, Knights D, Koester I, Kosciolek T, Kreps J, Langille MGI, Lee J, Ley R, Liu YX, Loftfield E, Lozupone C, Maher M, Marotz C, Martin BD, McDonald D, McIver LJ, Melnik AV, Metcalf JL, Morgan SC, Morton JT, Naimey AT, Navas-Molina JA, Nothias LF, Orchanian SB, Pearson T, Peoples SL, Petras D, Preuss ML, Pruesse E, Rasmussen LB, Rivers A, Robeson MS, Rosenthal P, Segata N, Shaffer M, Shiffer A, Sinha R, Song SJ, Spear JR, Swafford AD, Thompson LR, Torres PJ, Trinh P, Tripathi A, Turnbaugh PJ, Ul-Hasan S, van der Hooft JJJ, Vargas F, Vázquez-Baeza Y, Vogtmann E, von Hippel M, Walters W, Wan Y, Wang M, Warren J, Weber KC, Williamson CHD, Willis AD, Xu ZZ, Zaneveld JR, Zhang Y, Zhu Q, Knight R, and Caporaso JG. 2019. Reproducible, interactive, scalable and extensible microbiome data science using QIIME 2. Nature Biotechnology 37: 852–857. https://doi.org/10.1038/s41587-019-0209-9
+```text
+Gili Meno Sample 01 final fixed.fastq.gz
+```
 
-Di Tommaso, P., Chatzou, M., Floden, E. et al. Nextflow enables reproducible computational workflows. Nat Biotechnol 35, 316–319 (2017). https://doi.org/10.1038/nbt.3820
+---
 
-For further information and insights into pipeline development, please have a look at my [doctoral thesis](https://iris.univr.it/retrieve/handle/11562/1042782/205364/PhD_thesis_Simone_Maestri.pdf).
+### 2. Sample metadata file
 
-Maestri, S (2021). Development of novel bioinformatic pipelines for MinION-based DNA barcoding (Doctoral thesis, Università degli Studi di Verona, Verona, Italy). Retrieved from https://iris.univr.it/retrieve/handle/11562/1042782/205364/.
+The sample metadata file should be a tab-separated file:
+
+```text
+sample-metadata.tsv
+```
+
+Example:
+
+```tsv
+sample-id	location	sample-type	description
+sample01	Gili_Meno	lake_water	surface_water_sample_01
+sample02	Gili_Meno	lake_water	surface_water_sample_02
+sample03	Gili_Meno	lake_water	surface_water_sample_03
+```
+
+The `sample-id` values should match the FASTQ file names as closely as possible.
+
+For example:
+
+```text
+sample01.fastq.gz  →  sample01
+sample02.fastq.gz  →  sample02
+```
+
+---
+
+### 3. Reference database
+
+MetONTIIME can use marker-gene databases such as:
+
+- SILVA for 16S/18S rRNA
+- Greengenes for 16S rRNA
+- UNITE for fungal ITS
+- custom FASTA + taxonomy TSV databases
+
+Typical database files:
+
+```text
+db-sequences.fasta
+db-taxonomy.tsv
+db-sequences.qza
+db-taxonomy.qza
+```
+
+The FASTA file contains reference sequences.
+
+The taxonomy TSV file should map sequence IDs to taxonomy strings.
+
+Example:
+
+```tsv
+Feature ID	Taxon
+seq001	Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales
+seq002	Bacteria; Firmicutes; Bacilli; Lactobacillales
+```
+
+---
+
+## Running the original Nextflow pipeline
+
+At the current stage, the pipeline can still be run using the original MetONTIIME-style Nextflow command:
+
+```bash
+nextflow -c metontiime2.conf run metontiime2.nf \
+  --workDir="/path/to/fastq_directory" \
+  --resultsDir="/path/to/results_directory" \
+  -profile docker
+```
+
+For Singularity/Apptainer:
+
+```bash
+nextflow -c metontiime2.conf run metontiime2.nf \
+  --workDir="/path/to/fastq_directory" \
+  --resultsDir="/path/to/results_directory" \
+  -profile singularity
+```
+
+---
+
+## Important configuration parameters
+
+The original pipeline uses `metontiime2.conf` to set many parameters.
+
+Important parameters include:
+
+```text
+workDir
+sampleMetadata
+dbSequencesFasta
+dbTaxonomyTsv
+dbSequencesQza
+dbTaxonomyQza
+classifier
+maxNumReads
+minReadLength
+maxReadLength
+minQual
+extraEndsTrim
+clusteringIdentity
+minIdentity
+minQueryCoverage
+taxaLevelDiversity
+numReadsDiversity
+resultsDir
+```
+
+For ONT full-length 16S data, parameters commonly need careful tuning.
+
+Example starter values:
+
+```text
+minReadLength       = 1200
+maxReadLength       = 1700
+minQual             = 10
+extraEndsTrim       = 0
+clusteringIdentity  = 0.97
+classifier          = "VSEARCH"
+minIdentity         = 0.80
+minQueryCoverage    = 0.80
+```
+
+These are not universal values. Adjust them according to the marker, primer pair, sequencing chemistry, and expected amplicon length.
+
+---
+
+## Planned streamlined command
+
+The long-term goal of this fork is to support a simpler command such as:
+
+```bash
+metontiime-streamline run \
+  --input raw_fastq/ \
+  --metadata metadata/sample-metadata.tsv \
+  --db-sequences database/db-sequences.qza \
+  --db-taxonomy database/db-taxonomy.qza \
+  --marker 16s-full-length \
+  --profile docker \
+  --out results/
+```
+
+This command is not yet fully implemented.
+
+The first development goal is to create a wrapper that validates inputs, generates a safe configuration file, and runs the underlying Nextflow workflow.
+
+---
+
+## Expected outputs
+
+A successful run should produce QIIME2-compatible files such as:
+
+```text
+results/
+├── qza/
+│   ├── table.qza
+│   ├── rep-seqs.qza
+│   └── taxonomy.qza
+│
+├── qzv/
+│   ├── taxa-barplot.qzv
+│   ├── demux-summary.qzv
+│   └── diversity-visualizations.qzv
+│
+├── exports/
+│   ├── feature-table.tsv
+│   ├── taxonomy.tsv
+│   ├── rep-seqs.fasta
+│   └── table.biom
+│
+├── logs/
+│   └── pipeline.log
+│
+└── reports/
+    └── run-summary.md
+```
+
+Exact output names may differ depending on the current MetONTIIME process settings.
+
+---
+
+## QIIME2 downstream compatibility
+
+The main target of MetONTIIME-streamline is to generate outputs that can be used in the QIIME2 ecosystem.
+
+Potential downstream analyses include:
+
+- taxonomy barplots
+- alpha diversity
+- beta diversity
+- rarefaction analysis
+- feature table export
+- BIOM export
+- Krona visualization
+- Gneiss-style compositional analysis
+- PICRUSt-style functional prediction preparation, where appropriate
+
+Example QIIME2 visualization:
+
+```bash
+qiime tools view results/qzv/taxa-barplot.qzv
+```
+
+Or upload `.qzv` files to:
+
+```text
+https://view.qiime2.org/
+```
+
+---
+
+## Benchmark dataset: Gili Meno lake ONT metabarcoding data
+
+This fork will be benchmarked using an old ONT metabarcoding FASTQ dataset from Gili Meno lake, Indonesia.
+
+The benchmark dataset will be used to test:
+
+- input handling
+- FASTQ quality filtering
+- read length distribution
+- taxonomic assignment
+- feature table generation
+- QIIME2 compatibility
+- reproducibility of outputs
+- usability compared with the original MetONTIIME workflow
+
+The raw FASTQ data will not be committed to this repository unless it is cleared for public release.
+
+Planned local benchmark structure:
+
+```text
+benchmark_data/
+└── gili_meno_lake_ont/
+    ├── raw_fastq/
+    ├── metadata/
+    ├── configs/
+    ├── original_metontiime_results/
+    ├── streamline_results/
+    └── benchmark_notes.md
+```
+
+Planned public example structure:
+
+```text
+examples/
+└── gili_meno_lake_ont/
+    ├── README.md
+    ├── sample-metadata-template.tsv
+    ├── expected_file_structure.txt
+    └── run_example.sh
+```
+
+---
+
+## Development roadmap
+
+### v0.1 — Documentation cleanup
+
+- Rewrite README
+- Clarify project purpose
+- Correct fork installation instructions
+- Add input/output explanation
+- Add benchmark plan
+- Preserve original MetONTIIME credit
+
+### v0.2 — Configuration templates
+
+- Add example configuration files
+- Add full-length 16S template
+- Add 18S template
+- Add ITS template
+- Add Docker and Singularity examples
+
+### v0.3 — Input validation
+
+- Validate FASTQ directory
+- Validate metadata TSV
+- Check sample ID consistency
+- Check database file existence
+- Warn about spaces in file names
+- Warn about missing `.qza` files
+
+### v0.4 — Streamlined wrapper
+
+- Add simple CLI entry point
+- Generate config file automatically
+- Run Nextflow internally
+- Capture logs
+- Write run summary
+
+### v0.5 — Benchmark release
+
+- Add Gili Meno benchmark notes
+- Compare original MetONTIIME vs streamlined wrapper
+- Document runtime and output differences
+- Add downstream QIIME2 compatibility tests
+
+### v1.0 — Stable release
+
+- User-facing command-line tool
+- Validated example dataset
+- Clear documentation
+- Reproducible output report
+- Citation file
+- Archived release
+
+---
+
+## Troubleshooting
+
+### Problem: Nextflow cannot find input FASTQ files
+
+Check that your input directory contains `.fastq` or `.fastq.gz` files.
+
+```bash
+ls raw_fastq/
+```
+
+Avoid nested directories unless the pipeline process expects them.
+
+---
+
+### Problem: Docker permission error
+
+Try:
+
+```bash
+docker run hello-world
+```
+
+If Docker fails, check whether your user has permission to run Docker.
+
+---
+
+### Problem: Sample metadata does not match FASTQ names
+
+Check that sample IDs in the metadata match FASTQ file prefixes.
+
+Example:
+
+```text
+sample01.fastq.gz
+```
+
+should correspond to:
+
+```text
+sample01
+```
+
+in the metadata file.
+
+---
+
+### Problem: Too few reads remain after filtering
+
+Your filtering thresholds may be too strict.
+
+Check:
+
+```text
+minReadLength
+maxReadLength
+minQual
+```
+
+For full-length 16S, reads may vary around the expected amplicon length. ONT data can also have wider length distributions than short-read data.
+
+---
+
+### Problem: Too many unclassified reads
+
+Possible causes:
+
+- wrong marker database
+- wrong primer/amplicon target
+- poor read quality
+- overly strict identity threshold
+- incomplete database
+- non-target amplification
+- environmental organisms poorly represented in the database
+
+Try adjusting:
+
+```text
+minIdentity
+minQueryCoverage
+classifier
+database choice
+```
+
+---
+
+### Problem: QIIME2 cannot read output files
+
+Check that the output is a valid `.qza` or `.qzv` artifact.
+
+You can inspect artifacts using:
+
+```bash
+qiime tools peek file.qza
+```
+
+---
+
+## Citation
+
+If you use this fork, please cite the original MetONTIIME work and related tools.
+
+### Original MetONTIIME manuscript
+
+Matoute, A.; Maestri, S.; Saout, M.; Laghoe, L.; Simon, S.; Blanquart, H.; Hernandez Martinez, M.A.; Pierre Demar, M.  
+**Meat-Borne-Parasite: A Nanopore-Based Meta-Barcoding Work-Flow for Parasitic Microbiodiversity Assessment in the Wild Fauna of French Guiana.**  
+*Current Issues in Molecular Biology* 2024, 46, 3810–3821.  
+https://doi.org/10.3390/cimb46050237
+
+### QIIME2
+
+Bolyen, E.; Rideout, J.R.; Dillon, M.R.; Bokulich, N.A.; Abnet, C.C.; Al-Ghalith, G.A.; Alexander, H.; Alm, E.J.; Arumugam, M.; Asnicar, F.; et al.  
+**Reproducible, interactive, scalable and extensible microbiome data science using QIIME 2.**  
+*Nature Biotechnology* 2019, 37, 852–857.  
+https://doi.org/10.1038/s41587-019-0209-9
+
+### Nextflow
+
+Di Tommaso, P.; Chatzou, M.; Floden, E.W.; Barja, P.P.; Palumbo, E.; Notredame, C.  
+**Nextflow enables reproducible computational workflows.**  
+*Nature Biotechnology* 2017, 35, 316–319.  
+https://doi.org/10.1038/nbt.3820
+
+---
+
+## License
+
+This fork follows the license terms of the original MetONTIIME repository.
+
+Please check the `LICENSE` file for details.
+
+---
+
+## Maintainer
+
+MetONTIIME-streamline fork maintained by:
+
+```text
+Adhityo Wicaksono
+```
+
+This fork is developed as a practical bioinformatics usability project for ONT metabarcoding workflows, environmental microbiome analysis, and QIIME2-compatible downstream exploration.
