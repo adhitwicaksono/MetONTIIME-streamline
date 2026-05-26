@@ -1,13 +1,23 @@
-# Large/local data
+# Local databases
 database/
+
+# Benchmark/private data
 benchmark_data/
+
+# Pipeline outputs
 results/
 work/
 .nextflow*
+.nextflow.log*
+
+# QIIME2 / BIOM outputs
 *.qza
 *.qzv
 *.biom
 
-# Optional: ignore FASTQ by default
+# Large sequencing files ignored by default
 *.fastq
 *.fastq.gz
+
+# But keep the small Zymo demo FASTQ
+!examples/zymo_demo/raw_fastq/Zymo-GridION-EVEN-BB-SN_sup_pass_filtered_27F_1492Rw_1000_reads.fastq.gz
