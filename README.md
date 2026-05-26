@@ -211,13 +211,13 @@ Avoid spaces in file names.
 Good:
 
 ```text
-gili_meno_sample01.fastq.gz
+pulau_lombok_sample01.fastq.gz
 ```
 
 Avoid:
 
 ```text
-Gili Meno Sample 01 final fixed.fastq.gz
+Pulau Lombok Sample 01 final fixed.fastq.gz
 ```
 
 ---
