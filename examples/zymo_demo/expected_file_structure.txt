@@ -1,0 +1,17 @@
+Expected Zymo demo structure:
+
+examples/
+└── zymo_demo/
+    ├── raw_fastq/
+    │   └── Zymo-GridION-EVEN-BB-SN_sup_pass_filtered_27F_1492Rw_1000_reads.fastq.gz
+    ├── metadata/
+    │   └── sample-metadata.tsv
+    ├── config/
+    │   └── zymo_demo.example.conf
+    ├── run_example.sh
+    └── README.md
+
+Move the FASTQ from repo root with:
+
+git mv "Zymo-GridION-EVEN-BB-SN_sup_pass_filtered_27F_1492Rw_1000_reads.fastq.gz" \
+  examples/zymo_demo/raw_fastq/
