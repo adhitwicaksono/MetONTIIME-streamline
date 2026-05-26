@@ -1,0 +1,13 @@
+# Large/local data
+database/
+benchmark_data/
+results/
+work/
+.nextflow*
+*.qza
+*.qzv
+*.biom
+
+# Optional: ignore FASTQ by default
+*.fastq
+*.fastq.gz
